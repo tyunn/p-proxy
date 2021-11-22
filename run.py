@@ -10,8 +10,27 @@ import re
 logging.basicConfig(filename="example.log", filemode="w", level=logging.DEBUG)
 
 # example url http://127.0.0.1:8002/item?id=13713480
+WORD_LEN_TO_PROCESSING = 6
 PORT = 8002
 TARGER_DOMAIN = "http://news.ycombinator.com"
+
+
+def replace_text(content, encoding=None):
+    result = content
+    html = content.decode("utf-8")
+    soup = BeautifulSoup(html, "html.parser")
+    for txt in soup.find_all(string=True):
+        regex = re.compile(
+            r"(\W)(\w{}{}{})(\W)".format("{", WORD_LEN_TO_PROCESSING, "}")
+        )
+        if regex.search(txt) and txt.parent.name != "a":
+            newtext = regex.sub(
+                "{}{}{}".format(r"\1\2", u"\N{TRADE MARK SIGN}", r"\3"),
+                txt,
+            )
+            txt.replace_with(newtext)
+            result = soup.encode("utf8")
+    return result
 
 
 class MyProxy(SimpleHTTPRequestHandler):
@@ -24,18 +43,7 @@ class MyProxy(SimpleHTTPRequestHandler):
         content = r.content
 
         if r.headers["Content-Type"].startswith("text/html"):
-            html = content.decode("utf-8")
-            soup = BeautifulSoup(html, "html.parser")
-            for txt in soup.find_all(string=True):
-                if re.search(r"(\W)(\w{6})(\W)", txt) and txt.parent.name != "a":
-                    newtext = re.sub(
-                        r"(\W)(\w{6})(\W)",
-                        "{}{}{}".format(
-                            r"\1\2", u"\N{TRADE MARK SIGN}", r"\3"),
-                        txt,
-                    )
-                    txt.replace_with(newtext)
-            content = soup.encode("utf8")
+            content = replace_text(r.content)
 
         self.wfile.write(content)
 
