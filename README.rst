@@ -1,5 +1,5 @@
-Example of python proxy with change content
-===========================================
+Example of python proxy (with response content change)
+======================================================
 
 This is a sample Python proxy that redirects a request to http://news.ycombinator.com, receives a response, processes the html <body> tag, and appends a Unicode (TM) character to each 6-character word.
 
