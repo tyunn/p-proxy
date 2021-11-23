@@ -1,13 +1,10 @@
+import re
 import urllib.parse
 from socketserver import TCPServer
 from http.server import SimpleHTTPRequestHandler
-import urllib.request
-import logging
 import requests
 from bs4 import BeautifulSoup
-import re
 
-logging.basicConfig(filename="example.log", filemode="w", level=logging.DEBUG)
 
 # example url http://127.0.0.1:8002/item?id=13713480
 WORD_LEN_TO_PROCESSING = 6
@@ -15,21 +12,21 @@ PORT = 8002
 TARGER_DOMAIN = "http://news.ycombinator.com"
 
 
-def replace_text(content, encoding=None):
+def replace_content(content: bytes) -> bytes:
     result = content
-    html = content.decode("utf-8")
-    soup = BeautifulSoup(html, "html.parser")
-    for txt in soup.find_all(string=True):
-        regex = re.compile(
-            r"(\W)(\w{}{}{})(\W)".format("{", WORD_LEN_TO_PROCESSING, "}")
-        )
+    soup = BeautifulSoup(content.decode("utf-8"), "html.parser")
+    body = soup.body
+    regex = re.compile(r"(\W)(\w{}{}{})(\W)".format(
+        "{", WORD_LEN_TO_PROCESSING, "}"))
+
+    for txt in body.find_all(string=True):
         if regex.search(txt) and txt.parent.name != "a":
             newtext = regex.sub(
                 "{}{}{}".format(r"\1\2", u"\N{TRADE MARK SIGN}", r"\3"),
                 txt,
             )
             txt.replace_with(newtext)
-            result = soup.encode("utf8")
+            result = soup.encode("utf-8")
     return result
 
 
@@ -43,7 +40,7 @@ class MyProxy(SimpleHTTPRequestHandler):
         content = r.content
 
         if r.headers["Content-Type"].startswith("text/html"):
-            content = replace_text(r.content)
+            content = replace_content(r.content)
 
         self.wfile.write(content)
 
