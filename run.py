@@ -41,12 +41,12 @@ class MyProxy(SimpleHTTPRequestHandler):
     def do_GET(self):
         full_url = urllib.parse.urljoin(TARGER_ADDRESS, self.path)
         r = requests.get(full_url)
-        self.send_response(200)
+        self.send_response(r.status_code)
         self.send_header("Content-type", r.headers["Content-Type"])
         self.end_headers()
         content = r.content
 
-        if r.headers["Content-Type"].startswith("text/html"):
+        if r.status_code == 200 and r.headers["Content-Type"].startswith("text/html"):
             content = replace_content(r.content)
 
         self.wfile.write(content)
