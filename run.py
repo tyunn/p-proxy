@@ -18,8 +18,8 @@ def replace_content(content: bytes) -> bytes:
     result = content
     soup = BeautifulSoup(content.decode("utf-8"), "html.parser")
     body = soup.body
-    regex = re.compile(r"(\W)(\w{}{}{})(\W)".format(
-        "{", WORD_LEN_TO_PROCESSING, "}"))
+    regex = re.compile(r"(\W)(\w{}{}{})(?!{})(\W)".format(
+        "{", WORD_LEN_TO_PROCESSING, "}", "\N{TRADE MARK SIGN}"))
 
     for txt in body.find_all(string=True):
         if regex.search(txt) and txt.parent.name != "a":
